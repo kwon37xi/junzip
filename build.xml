@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="JUnzip" default="compile">
+
+	<!-- setting a property ex -->
+	<property file="build.properties" />
+
+	<!-- Set Classpath for Application -->
+	<path id="classpath">
+		<fileset dir="${library.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<!-- Making classes Dir -->
+	<target name="prepare">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${build.dir}/bin" />
+		<mkdir dir="${build.dir}/jar" />
+		<mkdir dir="${build.dir}/apidoc" />
+
+		<mkdir dir="${dist.dir}" />
+
+		<!--
+		<tstamp>
+			<format property="DSTAMP" pattern="yyyy-MM-dd"/>
+			<format property="TSTAMP" pattern="HH:mm"/>
+		</tstamp>
+		-->
+	</target>
+
+	<!-- Delete compiled classes -->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+
+	<!-- Compile and copy resource files -->
+	<target name="compile" depends="prepare">
+		<javac srcdir="${src.dir}" destdir="${build.dir}/bin" debug="on" encoding="UTF-8">
+			<include name="**/*.java" />
+			<classpath refid="classpath" />
+			<!-- <compilerarg value="-deprecation"/> -->
+		</javac>
+
+		<copy todir="${build.dir}/bin" overwrite="true">
+			<fileset dir="${src.dir}">
+				<include name="**/*.xml" />
+				<include name="**/*.xsl" />
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!--building classs' jar -->
+	<target name="jar" depends="compile">
+		<jar destfile="${build.dir}/jar/${project.name}_${project.version}.jar">
+			<fileset dir="${build.dir}/bin">
+				<include name="**/*" />
+				<exclude name="**/*.properties" />
+			</fileset>
+		</jar>
+	</target>
+
+	<!-- building javadoc -->
+	<target name="apidoc" depends="prepare">
+		<javadoc destdir="${build.dir}/apidoc" charset="utf-8" use="true">
+			<classpath refid="classpath" />
+			<fileset dir="${src.dir}">
+				<include name="**/*" />
+				<exclude name="**/*.properties" />
+			</fileset>
+		</javadoc>
+	</target>
+
+	<!-- building source tar.gz for deploying -->
+	<target name="srctgz" depends="prepare">
+		<!-- 기존의 tar.gz 파일을 삭제한다. -->
+		<delete>
+			<fileset dir="${dist.dir}">
+				<include name="*src.tar.gz" />
+			</fileset>
+		</delete>
+
+		<!-- src tar -->
+		<tar destfile="${dist.dir}/${project.name}_${project.version}_src.tar.gz" compression="gzip">
+			<tarfileset dir="${src.dir}" prefix="${project.name}_${project.version}_src/src" />
+			<tarfileset dir="${library.dir}" prefix="${project.name}_${project.version}_src/lib" />
+			<tarfileset dir="${doc.dir}" prefix="doc"/>
+			<tarfileset dir="${script.dir}" prefix="${project.name}_${project.version}_src/script"/>
+			<tarfileset dir="." prefix="${project.name}_${project.version}_src">
+				<include name="build.xml" />
+				<include name="build.properties" />
+			</tarfileset>
+
+		</tar>
+	</target>
+
+
+	<!-- building binary tar.gz for deploying -->
+	<target name="bintgz" depends="compile,jar,apidoc">
+
+		<!-- 기존의 tar.gz 파일을 삭제한다. -->
+		<delete>
+			<fileset dir="${dist.dir}">
+				<include name="*bin.tar.gz" />
+			</fileset>
+		</delete>
+
+		<!-- bin tar -->
+		<tar destfile="${dist.dir}/${project.name}_${project.version}_bin.tar.gz"
+			compression="gzip">
+			<tarfileset dir="${library.dir}" prefix="${project.name}_${project.version}/lib" />
+			<tarfileset dir="${build.dir}/jar" prefix="${project.name}_${project.version}/lib" />
+			<tarfileset dir="${doc.dir}" prefix="${project.name}_${project.version}/doc"/>
+			<tarfileset dir="${script.dir}" prefix="${project.name}_${project.version}/bin" mode="755"/>
+			<tarfileset dir="${build.dir}/apidoc" prefix="${project.name}_${project.version}/apidoc" />
+		</tar>
+	</target>
+
+	<!-- 모든 작업 수행 -->
+	<target name="all" depends="clean,srctgz,bintgz" />
+</project>
