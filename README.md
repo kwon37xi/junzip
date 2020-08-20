@@ -26,3 +26,8 @@ junzip -l filename.zip : 압축된 파일 목록 보기
 junzip filename.zip : MS949 인코딩으로 가정(한글 MS-Windows에서 압축되었을 때)하고 압축 풀기
 junzip -h : 도움말 보기
 ```
+
+## TODO
+- gradle 6.x
+- Java 8 or later
+- PPA
